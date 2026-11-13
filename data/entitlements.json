@@ -1,0 +1,5 @@
+{
+  "retail_analyst": ["retail_banking"],
+  "ops_engineer": ["operations"],
+  "compliance_officer": ["retail_banking", "risk_compliance", "operations"]
+}
