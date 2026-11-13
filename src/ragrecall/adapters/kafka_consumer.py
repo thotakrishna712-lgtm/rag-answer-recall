@@ -21,16 +21,32 @@ log = logging.getLogger("ragrecall.kafka")
 
 
 class MessageLike(Protocol):
-    def error(self) -> Any: ...
-    def value(self) -> bytes | None: ...
-    def offset(self) -> int: ...
+    """The subset of confluent_kafka.Message the consumer loop uses."""
+
+    def error(self) -> Any:
+        """Broker or partition error, or None."""
+
+    def value(self) -> bytes | None:
+        """Message payload; None for a Debezium tombstone."""
+
+    def offset(self) -> int:
+        """Partition offset, used for logging."""
 
 
 class ConsumerLike(Protocol):
-    def subscribe(self, topics: list[str]) -> None: ...
-    def poll(self, timeout: float) -> MessageLike | None: ...
-    def commit(self, message: MessageLike, asynchronous: bool) -> Any: ...
-    def close(self) -> None: ...
+    """The subset of confluent_kafka.Consumer the loop uses (lets tests pass a fake)."""
+
+    def subscribe(self, topics: list[str]) -> None:
+        """Subscribe to the CDC topic."""
+
+    def poll(self, timeout: float) -> MessageLike | None:
+        """Next message, or None when the poll times out."""
+
+    def commit(self, message: MessageLike, asynchronous: bool) -> Any:
+        """Commit the offset of an applied message."""
+
+    def close(self) -> None:
+        """Leave the group and release resources."""
 
 
 def consume(
