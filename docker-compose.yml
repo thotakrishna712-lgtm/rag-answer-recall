@@ -1,0 +1,47 @@
+# Local streaming stack: Redpanda (Kafka API) -> consumer -> shared SQLite -> API
+#   docker compose up -d --build
+#   docker compose run --rm producer          # publish snapshot + release events
+#   curl localhost:8000/v1/recalls
+services:
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda start --overprovisioned --smp 1 --memory 512M --reserve-memory 0M
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --check=false
+    ports: ["19092:19092"]
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health", "--exit-when-healthy"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build: .
+    environment:
+      RAGRECALL_DB: /app/var/ragrecall.db
+      RAGRECALL_SEED: ""        # state arrives through Kafka, not a file seed
+    volumes: ["state:/app/var"]
+    ports: ["8000:8000"]
+
+  consumer:
+    build: .
+    command: >
+      python -m ragrecall.adapters.kafka_consumer --bootstrap redpanda:9092
+      --topic dbserver.public.policies --db /app/var/ragrecall.db
+    volumes: ["state:/app/var"]
+    depends_on:
+      redpanda: { condition: service_healthy }
+      api: { condition: service_started }
+    restart: on-failure
+
+  producer:
+    build: .
+    profiles: ["tools"]
+    command: python scripts/produce_events.py --bootstrap redpanda:9092
+    volumes: ["./scripts:/app/scripts:ro"]
+    depends_on:
+      redpanda: { condition: service_healthy }
+
+volumes:
+  state:
