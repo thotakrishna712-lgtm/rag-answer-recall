@@ -1,0 +1,51 @@
+resources:
+  jobs:
+    cdc_chunk_versions:
+      name: "[${bundle.target}] ragrecall - CDC to chunk_versions + recalls"
+      tasks:
+        - task_key: stream
+          spark_python_task:
+            python_file: ../jobs/cdc_chunk_versions.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --bootstrap
+              - ${var.kafka_bootstrap}
+              - --checkpoint
+              - ${var.checkpoint_root}/cdc_chunk_versions
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "1"
+            dependencies:
+              - ../../dist/*.whl
+      continuous:
+        pause_status: UNPAUSED
+
+    release_gate:
+      name: "[${bundle.target}] ragrecall - release gate"
+      tasks:
+        - task_key: gate
+          python_wheel_task:
+            package_name: rag_answer_recall
+            entry_point: ragrecall-gate
+            parameters:
+              - --golden
+              - ${workspace.file_path}/data/golden/golden.jsonl
+              - --snapshot
+              - ${workspace.file_path}/data/cdc/snapshot.jsonl
+              - --apply
+              - ${workspace.file_path}/data/cdc/updates.jsonl
+              - --entitlements
+              - ${workspace.file_path}/data/entitlements.json
+              - --report
+              - /tmp/gate_report.json
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "1"
+            dependencies:
+              - ../../dist/*.whl
+              - mlflow>=2.17
