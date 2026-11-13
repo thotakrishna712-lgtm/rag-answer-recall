@@ -1,6 +1,7 @@
 # rag-answer-recall
 
 [![CI](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/ci.yml/badge.svg)](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/codeql.yml/badge.svg)](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/codeql.yml)
 [![RAG release gate](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/release-gate.yml/badge.svg)](https://github.com/thotakrishna712-lgtm/rag-answer-recall/actions/workflows/release-gate.yml)
 ![Python](https://img.shields.io/badge/python-3.11%20|%203.12-blue)
 ![mypy](https://img.shields.io/badge/mypy-strict-2a6db2)
@@ -208,6 +209,10 @@ See [`docs/DESIGN.md`](docs/DESIGN.md) for the decisions and trade-offs, and [`d
 - Recall notifications to Slack or email from the `/v1/recalls` cursor
 - Semantic diff, so a typo fix does not recall an answer while a changed number does
 - Per-answer "still true?" re-verification before notifying users
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and the [CHANGELOG](CHANGELOG.md). Design walkthroughs and runbooks live in the [wiki](../../wiki).
 
 ## License
 
