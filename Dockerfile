@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS base
+FROM python:3.15-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 RUN useradd --create-home --uid 10001 app
