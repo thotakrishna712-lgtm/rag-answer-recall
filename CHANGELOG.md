@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- CodeQL code scanning on push, pull request and weekly
+
+### Fixed
+- CodeQL `py/ineffectual-statement` notes: Protocol stubs now use docstrings instead of `...`
+
 ## 0.1.0 - 2026-11-13
 
 ### Added

@@ -21,7 +21,8 @@ class Generation:
 class Generator(Protocol):
     def generate(
         self, question: str, hits: list[Hit], weight: Callable[[str], float]
-    ) -> Generation | None: ...
+    ) -> Generation | None:
+        """Answer from `hits` only, or return None to refuse."""
 
 
 class ExtractiveGenerator:
