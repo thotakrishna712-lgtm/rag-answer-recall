@@ -1,0 +1,11 @@
+{"id": "g01-wire-retention", "question": "How long must wire transfer audit logs be retained?", "user_groups": ["retail_analyst"], "expected_chunk": "POL-WIRE-001::audit-log-retention", "must_contain": ["7 years"]}
+{"id": "g02-dual-control", "question": "What wire transfer amount requires dual control approval?", "user_groups": ["retail_analyst"], "expected_chunk": "POL-WIRE-001::dual-control-approval", "must_contain": ["$10,000"]}
+{"id": "g03-intl-cutoff", "question": "What is the cut-off time for international wires?", "user_groups": ["retail_analyst"], "expected_chunk": "POL-WIRE-001::cut-off-times", "must_contain": ["2:00 PM"]}
+{"id": "g04-sar-deadline", "question": "When must a suspicious activity report be filed?", "user_groups": ["compliance_officer"], "expected_chunk": "POL-AML-002::suspicious-activity-report-filing", "must_contain": ["30 calendar days"]}
+{"id": "g05-sar-entitlement", "question": "When must a suspicious activity report be filed?", "user_groups": ["retail_analyst"], "expect_refusal": true}
+{"id": "g06-alert-triage", "question": "How many days do analysts have to disposition an AML alert?", "user_groups": ["compliance_officer"], "expected_chunk": "POL-AML-002::alert-triage", "must_contain": ["10 business days"]}
+{"id": "g07-break-glass", "question": "When does break-glass production access expire?", "user_groups": ["ops_engineer"], "expected_chunk": "POL-ACC-003::break-glass-access", "must_contain": ["4 hours"]}
+{"id": "g08-access-review", "question": "How often must data owners recertify access grants?", "user_groups": ["ops_engineer"], "expected_chunk": "POL-ACC-003::access-reviews", "must_contain": ["quarter"]}
+{"id": "g09-sev1-ack", "question": "How quickly must a Severity 1 incident be acknowledged?", "user_groups": ["ops_engineer"], "expected_chunk": "POL-INC-004::severity-1-response", "must_contain": ["15 minutes"]}
+{"id": "g10-postmortem", "question": "When must a postmortem be published after a Severity 1 incident?", "user_groups": ["ops_engineer"], "expected_chunk": "POL-INC-004::postmortem", "must_contain": ["5 business days"]}
+{"id": "g11-out-of-scope", "question": "What is the cafeteria lunch menu on Fridays?", "user_groups": ["compliance_officer"], "expect_refusal": true}
