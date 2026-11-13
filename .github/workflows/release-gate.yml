@@ -1,0 +1,49 @@
+name: RAG release gate
+
+# Runs whenever retrieval code, policies, CDC fixtures or the golden set change.
+on:
+  pull_request:
+    paths:
+      - "src/ragrecall/**"
+      - "data/**"
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    env:
+      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e .
+      - name: Install MLflow when a tracking server is configured
+        if: env.MLFLOW_TRACKING_URI != ''
+        run: pip install -e ".[mlflow]"
+      - name: Baseline gate (full golden set)
+        run: python -m ragrecall.evaluate --report reports/baseline.json
+      - name: Release gate (apply this release's CDC events, classify drift)
+        run: |
+          python -m ragrecall.evaluate --apply data/cdc/updates.jsonl \
+            --report reports/release.json | tee reports/release.txt
+      - name: Reconcile index against source events
+        run: |
+          python -m ragrecall.reconcile \
+            --events data/cdc/snapshot.jsonl data/cdc/updates.jsonl | tee reports/reconcile.json
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo '### RAG release gate'
+            echo '```'
+            cat reports/release.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gate-reports
+          path: reports/
