@@ -1,0 +1,40 @@
+# Databricks Asset Bundle: databricks bundle deploy -t dev
+bundle:
+  name: rag-answer-recall
+
+include:
+  - resources/*.yml
+
+sync:
+  paths:
+    - ../src
+    - ../data
+    - ./jobs
+    - ./sql
+
+variables:
+  catalog:
+    description: Unity Catalog catalog per environment
+  kafka_bootstrap:
+    description: Confluent bootstrap servers
+  checkpoint_root:
+    default: /Volumes/${var.catalog}/policy_rag/checkpoints
+
+artifacts:
+  ragrecall_wheel:
+    type: whl
+    path: ..
+    build: python -m pip wheel --no-deps -w dist .
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: policy_dev
+      kafka_bootstrap: pkc-dev.us-east-1.aws.confluent.cloud:9092
+  prod:
+    mode: production
+    variables:
+      catalog: policy_prod
+      kafka_bootstrap: pkc-prod.us-east-1.aws.confluent.cloud:9092
