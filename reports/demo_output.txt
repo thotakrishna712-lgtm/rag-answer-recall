@@ -1,0 +1,85 @@
+
+==============================================================================
+1. Initial Debezium snapshot (op=r)
+==============================================================================
+  lsn=100 POL-ACC-003: 3 chunks indexed
+  lsn=101 POL-AML-002: 3 chunks indexed
+  lsn=102 POL-INC-004: 2 chunks indexed
+  lsn=103 POL-WIRE-001: 4 chunks indexed
+  baseline gate: PASSED {'retrieval_hit_rate': 1.0, 'answer_correctness': 1.0, 'groundedness': 1.0}
+
+==============================================================================
+2. Staff ask questions; every answer is ledgered with exact chunk versions
+==============================================================================
+[retail_analyst] Q: How long must wire transfer audit logs be retained?
+  A: Wire transfer audit logs must be retained for 7 years in immutable storage.
+     cite: POL-WIRE-001 / 4.2 Audit Log Retention (version 9)
+     answer_id=ans-0001
+[retail_analyst] Q: What wire transfer amount requires dual control approval?
+  A: Any wire transfer above $10,000 requires dual control approval by two authorised staff members.
+     cite: POL-WIRE-001 / 2. Dual Control Approval (version 11)
+     answer_id=ans-0002
+[retail_analyst] Q: When must a suspicious activity report be filed?
+  A: No answer found in the policies available to your groups.
+     answer_id=ans-0003
+[compliance_officer] Q: When must a suspicious activity report be filed?
+  A: A suspicious activity report must be filed within 30 calendar days of the initial detection of suspicious activity.
+     cite: POL-AML-002 / 2. Suspicious Activity Report Filing (version 5)
+     answer_id=ans-0004
+[ops_engineer] Q: How quickly must a Severity 1 incident be acknowledged?
+  A: A Severity 1 incident must be acknowledged by the on-call engineer within 15 minutes of the page.
+     cite: POL-INC-004 / 1. Severity 1 Response (version 8)
+     answer_id=ans-0005
+
+==============================================================================
+3. Release: CDC stream with replay, late event, PII leak, bad schema, delete
+==============================================================================
+  lsn=200 POL-WIRE-001 -> APPLIED  modified=1 removed=0 unchanged=3 recalled=['ans-0001']
+  lsn=200 POL-WIRE-001 -> SKIPPED_DUPLICATE
+  lsn=150 POL-WIRE-001 -> SKIPPED_STALE
+  lsn=210 POL-ACC-003 -> QUARANTINED [PII_DETECTED]
+  lsn=220 POL-AML-002 -> QUARANTINED [MISSING_REQUIRED_FIELD]
+  lsn=225 POL-ACC-003 -> APPLIED  modified=0 removed=0 unchanged=3 recalled=[]
+  lsn=230 POL-INC-004 -> APPLIED  modified=0 removed=2 unchanged=0 recalled=['ans-0005']
+
+==============================================================================
+4. Answer recall: who was told something that is no longer true?
+==============================================================================
+  RECALL #1 answer=ans-0001 reason=SECTION_MODIFIED lsn=200
+    question:    How long must wire transfer audit logs be retained?
+    was based on: Wire transfer audit logs must be retained for 7 years in immutable storage. Logs are encrypted with customer-managed keys and access is reviewed quarterly.
+    now says:     Wire transfer audit logs must be retained for 10 years in immutable storage. Logs are encrypted with customer-managed keys and access is reviewed quarterly.
+  RECALL #2 answer=ans-0005 reason=POLICY_DELETED lsn=230
+    question:    How quickly must a Severity 1 incident be acknowledged?
+    was based on: A Severity 1 incident must be acknowledged by the on-call engineer within 15 minutes of the page. The incident commander posts status updates to stakeholders every 30 minutes until resolution.
+    now says:     (section removed)
+  answer ans-0001: RECALLED How long must wire transfer audit logs be retained?
+  answer ans-0002: FRESH    What wire transfer amount requires dual control approval?
+  answer ans-0005: RECALLED How quickly must a Severity 1 incident be acknowledged?
+
+==============================================================================
+5. Same question after the change: new version is served
+==============================================================================
+[retail_analyst] Q: How long must wire transfer audit logs be retained?
+  A: Wire transfer audit logs must be retained for 10 years in immutable storage.
+     cite: POL-WIRE-001 / 4.2 Audit Log Retention (version 13)
+     answer_id=ans-0006
+
+==============================================================================
+6. Targeted release gate: only golden cases touched by this release
+==============================================================================
+  gate: PASSED (3 cases)
+  owner review required: ['g01-wire-retention', 'g09-sev1-ack', 'g10-postmortem']
+  regressions: none
+
+==============================================================================
+7. Quarantine (PII redacted before storage)
+==============================================================================
+  lsn=210 PII_DETECTED: US_SSN | raw SSN stored: False
+  lsn=220 MISSING_REQUIRED_FIELD: after.effective_date: Field required | raw SSN stored: False
+
+==============================================================================
+8. SCD2 history for POL-WIRE-001 audit-log-retention
+==============================================================================
+  v9 lsn[103, 200) current=False closed_by=SECTION_MODIFIED checksum=93ca333c2c4e0b67
+  v13 lsn[200, None) current=True closed_by=None checksum=ffc0f031e9f1be3d
